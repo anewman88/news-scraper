@@ -1,3 +1,5 @@
+$(document).ready(function() {
+
 // Grab the articles as a json
 $.getJSON("/articles", function(data) {
   // For each one
@@ -69,4 +71,6 @@ $(document).on("click", "#savenote", function() {
   // Also, remove the values entered in the input and textarea for note entry
   $("#titleinput").val("");
   $("#bodyinput").val("");
+});
+
 });

@@ -9,6 +9,7 @@ var logger = require("morgan");
 var mongoose = require("mongoose");
 var axios = require("axios");
 var cheerio = require("cheerio");
+var path = require("path");
 
 // Require the database models
 var db = require("./models");
@@ -48,36 +49,33 @@ var DoThis = false;
 /*******************************************************************************************************/
 //if (DoThis) {
 
+  // HTML GET Requests
+  // Below code handles when users "visit" a page.
+  // ---------------------------------------------------------------------------
+  app.get("/", function(req, res) {
+    res.sendFile(path.join(__dirname, "../public/index.html"));
+  });
+
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with axios
 //  axios.get("https://mars.nasa.gov/news/?page=0&per_page=40&order=publish_date+desc%2Ccreated_at+desc&search=&category=19%2C165%2C184%2C204&blank_scope=Latest").then(function(response) {
-  axios.get("https://www.jpl.nasa.gov/news/").then(function(response) {
+  axios.get("https://www.jpl.nasa.gov/news/")
+  .then(function(response) {
 
     if (DebugOn) {
       console.log ("Scraped Data ", response.data);
       console.log ("**************************************************************");
     } 
 
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
+    //  Load the response.data into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
     
-    // $(".slide").each(function(i, item){
-    //   var temp = $(".article_teaser_body", item).text();
-    //   var n = temp.search("2019");
-    //   var date = temp.substr(0, n+4);
-    //   var summary = temp.substring(n+4);
-    //   console.log("link: " + $(this).children("a").attr("href"));
-    //   console.log("date: " + date);
-    //   console.log("title: *" + $(".content_title", item).text().trim() + "*");
-    //   console.log("summary: " + summary);
-    //   console.log("img: "+  $(".img img", item).attr("src"));
-    // });
-
     // Get every li class="slide" and do the following:
     $(".slide").each(function(i, item) {
-
-      // the date and the summary are combined.  Need to split out 
+      
+      // the article date and the summary are combined.  Need to split out 
       var temp = $(".article_teaser_body", item).text();
+      
       var n = temp.search("2019");
 
       if (n > 0) {
@@ -98,9 +96,10 @@ app.get("/scrape", function(req, res) {
           console.log ("***************************************")
         }
 
-        // add this to the database 
+        // Display this article on the web page 
 
       }  // if (n>0)
+
 
       // Create a new Article using the `result` object built from scraping
       db.Article.create(result)
@@ -113,13 +112,71 @@ app.get("/scrape", function(req, res) {
           console.log(err);
         });
 
-    });  
-
+    }); // $(".slide").each(function(i, item) {
 
     // Send a message to the client
     res.send("Scrape Complete");
-  });
+  });  //  axios.get("https://www.jpl.nasa.gov/news/")
 });
+
+app.get("/newscrape", function(req, res) {
+
+  var article_array = [];
+
+  // Get the body of the website html with axios
+//  axios.get("https://mars.nasa.gov/news/?page=0&per_page=40&order=publish_date+desc%2Ccreated_at+desc&search=&category=19%2C165%2C184%2C204&blank_scope=Latest").then(function(response) {
+  axios.get("https://www.jpl.nasa.gov/news/")
+  .then(function(response) {
+
+    if (DebugOn) {
+      console.log ("Scraped Data ", response.data);
+      console.log ("**************************************************************");
+    } 
+
+    // Load the response.data into cheerio and save it to $ for a shorthand selector
+    var $ = cheerio.load(response.data);
+    
+    // Get every li class="slide" and do the following:
+    $(".slide").each(function(i, item) {
+
+      // the date and the summary are combined.  Need to split out 
+      var temp = $(".article_teaser_body", item).text();
+      var n = temp.search("2019");
+
+      if (n > 0) {
+        // Save an empty result object
+        var article = {};
+
+        var date = temp.substr(0, n+4);
+        var summary = temp.substring(n+4);
+  
+        article.date = date;
+        article.link = $(this).children("a").attr("href");
+        article.title = $(".content_title", item).text().trim();
+        article.summary = summary;
+        article.image = $(".img img", item).attr("src");
+
+        if (DebugOn) {
+          console.log ("For each article ", article);
+          console.log ("***************************************")
+        }
+
+        // push the result into the article_array 
+        article_array.push(article);
+
+      }  // if (n>0)
+
+    });  // $(".slide").each(function(i, item)
+
+    res.json(article_array);
+
+    // Send a message to the client
+    res.send("Scrape Complete");
+
+  });   // axios.get("https://www.jpl.nasa.gov/news/")
+  
+});  // app.get("/newscrape", function(req, res)
+
 
 // Route for getting all Articles from the db
 app.get("/articles", function(req, res) {

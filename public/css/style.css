@@ -19,6 +19,8 @@ body {
 
 .article-box {
     background-color: rgb(223, 222, 219);
+    margin-bottom: 15px;
+    padding: 10px;
   }
 
 .container {

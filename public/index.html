@@ -62,16 +62,18 @@
 -->
           <ul class="navbar-nav">
             <li class="nav-item">
-              <!-- Button to call the Scrape Function -->
               <button type="button" class="btn btn-primary" id="ScrapeBtn">Scrape New Articles</button>   
+            </li>
+            <li class="nav-item">
+              <button type="button" class="btn btn-primary" id="ClearScrapedBtn">Clear Scraped Articles</button>   
             </li>
             <li class="nav-item">
                 <button type="button" class="btn btn-primary" id="ShowSavedBtn">Show Saved Articles</button>   
             </li>
             <li class="nav-item">
-                <button type="button" class="btn btn-primary" id="ClearSavedBtn">Clear Saved Articles</button>   
+              <button type="button" class="btn btn-primary" id="ClearSavedBtn">Clear Saved Articles</button>   
             </li>
-          </ul>
+        </ul>
       </nav>
   
 <!---------------------- Jumbotron header --------------------------->
@@ -81,7 +83,7 @@
         <div class="container">
           <h1 class="jumbo display-4 text-center">NASA- Jet Propulsion Laboratory&nbsp&nbsp&nbsp</h1>
           <p class="lead text-center">JPL NEWS&nbsp&nbsp&nbsp&nbsp</p>
-          <p class="lead text-center">Save the Latest from Space&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</p>
+          <p class="lead text-center">The Latest News from Space&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</p>
         </div>
       </div>
 
@@ -91,7 +93,7 @@
             <div class="container article-list">
 
               <div class="row article-box">
-                  <div class="col-3" id="box_0" value="0">
+                  <div class="col-3">
                       <img src="./img/testpic.jpg" alt="test image"class="img-thumbnail"  width="300" height="200">
                   </div>
                   <div class="col-9">
@@ -104,7 +106,7 @@
                         </div>
                     </div>
                     <div class="row">
-                      <h4>NASA Maps Surface Changes From California Quakes</h4>
+                      <h4><a href="https://www.jpl.nasa.gov/news/news.php?feature=7448" target="_blank">NASA Maps Surface Changes From California Quakes</a></h4>
                     </div>
                     <div class="row">
                         <p>NASA's Advanced Rapid Imaging and Analysis (ARIA) team created this co-seismic Interferometric Synthetic Aperture Radar (InSAR) map, which shows surface displacement caused by the recent major earthquakes in Southern California, including the magnitude 6.4 and the magnitude 7.1 events on July 4 and July 5, 2019, respectively.</p>
@@ -120,12 +122,255 @@
       </main>
 
       <div id="wrapper">
-          <div id="articles"></div>
+          <div id="article-list"></div>
           <div id="notes"></div>
       </div>
         
 
     </div> <!-- container -->
+
+ <!-- *********************** Modals ************************ -->
+  
+  <!------------------- Shopping Cart Modal ------------------>
+  <div id="CartModal" class="modal fade" role="dialog">
+
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+  
+          <div class="modal-content">
+  
+            <div class="modal-header">
+                  <h3 class="modal-title" id="modal-title">Shopping Cart</h3>
+                  <button type="button" class="btn btn-default" data-dismiss="modal"> Close </button>
+            </div>
+  
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-2 text-center">
+                      <p>Product #</p>
+                    </div>
+                    <div class="col-4">
+                       <p>Product Name</p>
+                    </div>
+                    <div class="col-2 text-center">
+                        <p>Quantity</p>
+                    </div>
+                    <div class="col-2">
+                        <p>Unit Price</p>
+                    </div>
+                    <div class="col-2">
+                        <p>Total Cost</p>
+                    </div>
+                </div>  <!-- Row -->
+
+                <div>
+                    <span class="shoppingcart-list"></span>
+                </div>
+                     
+            </div>  <!--  modal-body -->
+          </div> <!-- modal-content -->
+      </div> <!-- modal-dialog -->
+  </div>  <!-- outer modal div -->
+
+  <!------------------- Enter Modal ------------------>
+  <div id="CheckoutModal" class="modal fade" role="dialog">
+
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+
+        <div class="modal-content">
+
+          <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Checkout</h3>
+                <button type="button" class="btn btn-default" data-dismiss="modal"> Close </button>
+          </div>
+
+          <div class="modal-body">
+
+              <p>Please enter your shipping address information below.  Items marked with an * are required.</p>
+              <form>
+                  <div class="form-group">
+                      <label for="CustomerFirstName">First Name: *</label>
+                      <input type="text" class="form-control" id="CustomerFirstName">
+                  </div>
+                  <div class="form-group">
+                       <label for="CustomerLastName">Last Name: *</label>
+                       <input type="text" class="form-control" id="CustomerLastName">
+                  </div>
+          
+                <div class="form-group">
+                    <label for="CustomerAddr">Address: *</label>
+                    <input type="text" class="form-control" placeholder="Line 1" id="CustomerAddr1">
+                </div>
+
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Line 2 (optional)" id="CustomerAddr2">
+                </div>
+
+                <div class="form-group">
+                    <label for="City">City: *</label>
+                    <input type="text" class="form-control" id="CustomerCity">
+                </div>
+
+                <div class="form-group">
+                    <label for="State">State: *</label>
+                    <input type="text" class="form-control" id="CustomerState">
+                </div>
+
+                <div class="form-group">
+                    <label for="Zip">Zip Code: *</label>
+                    <input type="text" class="form-control" id="CustomerZip">
+                </div>
+
+                <div class="form-group">
+                    <label for="Email">Email Address: *</label>
+                    <input type="text" class="form-control" placeholder="JohnDoe@gmail.com" id="CustomerEmail">
+                </div>
+
+                <div class="form-group">
+                    <label for="Comment">Comment:</label>
+                    <input type="text" class="form-control" id="CustomerComment">
+                </div>
+
+              </form>
+
+              <div>
+                  <span class="checkout-list"></span>
+              </div>
+                   
+          </div>  <!--  modal-body -->
+          <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" id="order-submit">
+                  <i class="fa fa-check-circle" aria-hidden="true"></i> Submit
+              </button>
+          </div>
+
+        </div> <!-- modal-content -->
+      </div> <!-- modal-dialog -->
+  </div>  <!-- outer modal div -->
+
+  <!------------------- Order Summary Modal ------------------>
+  <div id="OrderSummaryModal" class="modal fade" role="dialog">
+
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+  
+          <div class="modal-content">
+  
+            <div class="modal-header">
+                  <h3 class="modal-title" id="modal-title">Order Summary</h3>
+                  <button type="button" class="btn btn-default" data-dismiss="modal"> Close </button>
+            </div>
+  
+            <div class="modal-body">
+                <!-- ********************************** -->
+
+                <div class="row">
+                  <span class="customer-info"></span>
+                </div>  
+                  
+                <div> <h4 style="text-align:center">Customer Info</h4> </div>
+                <div class="row"> 
+                    <div class="col-1"></div>
+                    <div class="col-2">Name:</div>
+                    <div class="col-2"><a id="customer_first_name"></a></div>
+                    <div class="col-2"><a id="customer_last_name"></a></div>
+                </div>  
+                <div class="row"> 
+                    <div class="col-1"></div>
+                    <div class="col-2">Address:</div>
+                    <div class="col-4"><a id="customer_address1"></a></div>
+                </div>  
+                <div class="row"> 
+                    <div class="col-1"></div>
+                    <div class="col-2"></div>
+                    <div class="col-4"><a id="customer_address2"></a></div>
+                </div>  
+                <div class="row"> 
+                    <div class="col-1"></div>
+                    <div class="col-2"></div>
+                    <div class="col-2"><a id="customer_city">,</a></div>
+                    <div class="col-1"><a id="customer_state"></a></div>
+                    <div class="col-4"><a id="customer_zip"></a></div>
+                </div>  
+                <div class="row"> 
+                    <div class="col-1"></div>
+                    <div class="col-2">Email Addr:</div>
+                    <div class="col-4"><a id="customer_email"></a></div>
+                </div>  
+                
+                <br>
+                <hr>  
+                <div class="row">
+                    <div class="col-1"></div>
+                    <div class="col-2">Order #:</div>
+                    <div class="col-2"><a id="PO_number"></a></div>
+                    <div class="col-2">Order Date:</div>
+                    <div class="col-5"><a id="DateCreated"></a></div>
+                </div>
+                <div class="row">
+                    <div class="col-1"></div>
+                    <div class="col-2">Comment:</div>
+                    <div class="col-8"><a id="customer_comment"></a></div>
+                </div>
+
+                <br>
+                <hr>  
+                <div class="row">
+                    <div class="col-2 text-center">
+                      <p>Product #</p>
+                    </div>
+                    <div class="col-4">
+                       <p>Product Name</p>
+                    </div>
+                    <div class="col-2 text-center">
+                        <p>Quantity</p>
+                    </div>
+                    <div class="col-2">
+                        <p>Unit Price</p>
+                    </div>
+                    <div class="col-2">
+                        <p>Total Cost</p>
+                    </div>
+                </div>  <!-- Row -->
+
+                <div>
+                  <span class="order-summary-list"></span>
+                </div>
+              </container>
+
+                     
+            </div>  <!--  modal-body -->
+          </div> <!-- modal-content -->
+      </div> <!-- modal-dialog -->
+  </div>  <!-- outer modal div -->
+
+  <!------------------- AlertBox Modal ------------------>
+  <div id="AlertModal" class="modal fade" role="dialog">
+
+      <div class="modal-dialog  modal-md">
+
+        <div class="modal-content" id="AlertBox">
+
+          <div class="modal-header">
+              <div>
+                  <span class="alert-msg1"></span>
+              </div>   
+          </div>
+
+          <div class="modal-body">
+              <div>
+                  <span class="alert-msg2"></span>
+              </div>   
+          </div>  <!--  modal-body -->
+
+          <div class="modal-footer">
+             <button type="button" class="btn btn-default" data-dismiss="modal"> Close </button>        
+          </div>
+
+        </div> <!-- modal-content -->
+      </div> <!-- modal-dialog -->
+  </div>  <!-- outer modal div -->
+  <!------------------- AlertBox Modal ------------------>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="app.js"></script>

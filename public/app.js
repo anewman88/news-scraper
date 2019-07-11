@@ -1,7 +1,87 @@
 $(document).ready(function() {
 
-// Grab the articles as a json
+  var article_list = [];   // The article list array from the scrape
+  var $ArticleList = $(".article-list");  // The article list for display 
+  var DebugOn = true;   // debug flag
+  var ItemsPerPage = 8;
+  var ArticleIndex = 0;
+
+  // Event listeners for button clicks
+  // $(document).on("click", "button.save-article", SaveArticle());
+  // $(document).on("click", "button.add-comment", AddComment());
+  // $(document).on("click", "button.delete-comment", DeleteComment());
+  
+  function SaveArticle(event) {
+//    event.preventDefault();
+
+  }  // SaveArticle(event)
+
+  function AddComment(event) {
+//    event.preventDefault();
+
+  }  // AddComment(event)
+
+  function DeleteComment(event) {
+//    event.preventDefault();
+
+  }  // DeleteComment(event)
+
+  //*********************************************************************************
+  // * Function: $("#ScrapeBtn")                                                    *
+  // * Event handler function for the Scrape Button - initiates a scrape of the     *
+  // * website and then displays the array of articles returned                     *
+  // ********************************************************************************
+  $("#ScrapeBtn").click(function(){
+    if (DebugOn) console.log ("Scrape Button Clicked");
+
+    getArticles();                         // get the article_list and display them
+    if (DebugOn) console.log ("Got article_list ", article_list);
+  
+    DisplayArticles();
+  });  // $("#ScrapeBtn").click(function())
+
+  //*********************************************************************************
+  // * Function: $("#ClearScrapedBtn")                                              *
+  // * Event handler function for the Clear Scraped Articles Button - clears the    *
+  // * scraped articles from the page and clears the article-array                  *
+  // ********************************************************************************
+  $("#ClearScrapedBtn").click(function(){
+    if (DebugOn) console.log ("Clear Scraped Button Clicked");
+
+  });  // $("#ClearScrapedBtn").click(function())
+
+  //*********************************************************************************
+  // * Function: $("#ShowSavedBtn")                                                 *
+  // * Event handler function for the Show Saved Button - lists the saved articles  *
+  // * in the database                                                              *
+  // ********************************************************************************
+  $("#ShowSavedBtn").click(function(){
+    if (DebugOn) console.log ("Show Saved Button Clicked");
+
+  });  // $("#ShowSavedBtn").click(function())
+
+  //*********************************************************************************
+  // * Function: $("#ClearSavedBtn")                                                *
+  // * Event handler function for the Clear Saved Button - deletes the saved        *
+  // * articles from the database and clears them from the website display          *
+  // ********************************************************************************
+  $("#ClearSavedBtn").click(function(){
+    if (DebugOn) console.log ("Clear Saved Button Clicked");
+
+  });  // $("#ClearSavedBtn").click(function())
+
+
+  //************************************************************************************/
+  // Get the articles from  the website and diplay them on the page
+  getArticles();                         // get the article_list and display them
+  if (DebugOn) console.log ("Got article_list ", article_list);
+
+// Grab the saved articles as a json
 $.getJSON("/articles", function(data) {
+
+
+  DisplayArticles();
+
   // For each one
   for (var i = 0; i < data.length; i++) {
     // Display the apropos information on the page
@@ -72,5 +152,87 @@ $(document).on("click", "#savenote", function() {
   $("#titleinput").val("");
   $("#bodyinput").val("");
 });
+
+    //*********************************************************************************
+    // * Function: getArticles()                                                      *
+    // * This function gets the articles from the website and displays them           *
+    // ********************************************************************************
+    function getArticles() {
+      $.get("/newscrape", function(data) {
+        article_list = data;
+        ArticleIndex = 0;  // reset the index into the article array
+
+        if (DebugOn) console.log ("in getArticles- .get data", data);
+        DisplayArticles();   
+      });
+    }  //function getArticles()
+
+    //**********************************************************************************
+    // * Function: createArticleRow(article)                                           *
+    // * This function creates an article row for display on the article list          *
+    // *********************************************************************************
+    function createArticleRow(article) {
+
+      var $newRow = $(
+      [
+          "<div class='row article-box'>",
+              "<div class='col-3'>",
+                 "<img src='", article.image, "' alt='test image' class='img-thumbnail' width='300' height='200'>",
+              "</div>",
+              "<div class='col-9'>",
+                "<div class='row'>",
+                    "<div class='col-10'>",
+                      "<h5>", article.date, "</h5>",
+                    "</div>",
+                    "<div class='col-2'>",
+                        "<button class='btn btn-success article-item' id='btn_0' value='0'>Save Article</button>",
+                    "</div>",
+                "</div>",
+                "<div class='row'>",
+                  "<h4><a href='", article.link, "' target='_blank'>", article.title,"</a></h4>",
+                "</div>",
+                "<div class='row'>",
+                    "<p>", article.summary, "</p>",
+                "</div>",
+              "</div>",
+          "</div>"   
+      ].join("")
+      ); 
+      
+      return $newRow;
+  }   // function createArticleRow(article)
+
+
+    // ********************************************************************************
+    // * Function: DisplayArticles()                                                  *
+    // * This function displays the scraped article on the page                              *
+    // ********************************************************************************
+    function DisplayArticles() {
+
+      // make sure there are articles in the array to display
+      if (article_list.length > 0) {
+          
+          // Paging Determine which articles in the article_list to display 
+          // var firstIndex = ArticleIndex;
+          // var lastIndex = ArticleIndex + ItemsPerPage;
+
+          // if (lastIndex >= article_list.length)
+          //    lastIndex = article_list.length;
+  
+          $ArticleList.empty();
+          var articlesToAdd = [];
+
+          for (var i = 0; i < article_list.length; i++) {
+            articlesToAdd.push(createArticleRow(article_list[i]));
+          }
+
+        // populate the articles on the html page
+        $ArticleList.append(articlesToAdd);
+
+      }  // if (article_list.length > 0)
+  
+  }  // DisplayArticles()  
+
+
 
 });

@@ -12,7 +12,7 @@ $(document).ready(function() {
 
   //******************************* Executed Code *************************************/
   // Scrape the articles from the website and display them on the page
-  scrapeAticles();      
+  scrapeArticles();      
 
   //************************************ Functions ***********************************/
 
@@ -57,9 +57,11 @@ $(document).ready(function() {
   //*********************************************************************************
   // * Function: $("#ShowSavedBtn")                                                 *
   // * Event handler function for the Show Saved Button - lists the saved articles  *
-  // * in the database                                                              *
+  // * in the database.  The function is separated out so that the ShowSavedArticles*     *
+  // * function can be called within the application without a button click         *                                                           *
   // ********************************************************************************
-  $("#ShowSavedBtn").click(function(){
+  $("#ShowSavedBtn").click(ShowSavedArticles);
+  function ShowSavedArticles(){
     if (DebugOn) console.log ("Show Saved Button Clicked");
 
     $.ajax({
@@ -71,15 +73,6 @@ $(document).ready(function() {
 
       DisplaySavedArticles(data);
 
-      // The title of the article
-      $("#notes").append("<h2>" + data.title + "</h2>");
-      // An input to enter a new title
-      $("#notes").append("<input id='titleinput' name='title' >");
-      // A textarea to add a new note body
-      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
-      // A button to submit a new note, with the id of the article saved to it
-      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
-
       // If there's a note in the article
       if (data.note) {
         // Place the title of the note in the title input
@@ -88,10 +81,7 @@ $(document).ready(function() {
         $("#bodyinput").val(data.note.body);
       }
     });
-  
-
-
-  });  // $("#ShowSavedBtn").click(function())
+  }  // $("#ShowSavedBtn").click(function())
 
   //*********************************************************************************
   // * Function: $("#ClearSavedBtn")                                                *
@@ -104,7 +94,32 @@ $(document).ready(function() {
   });  // $("#ClearSavedBtn").click(function())
 
 
-
+  //*********************************************************************************
+  // * Function: $(document).on("click", ".article-delete", function())             *
+  // * Event handler function for the Delete Article Button - deletes a single      *
+  // * saved article from the database and clears them from the website display     *
+  // ********************************************************************************
+  $(document).on("click", ".article-delete", function() {
+    
+    if (DebugOn) console.log ("Delete Article Button Clicked");
+    
+    // Get the index associated with the article from the save button
+    var ArticleId = this.value;
+       
+    if (DebugOn) console.log ("Article to be deleted: " + ArticleId);
+  
+    $.ajax({
+      method: "DELETE",
+      url: "/deletesaved/" + ArticleId
+    })
+    .then(function(data) {
+      
+      if (DebugOn) console.log(data);  // Log the response
+      
+      // Re-display the saved articles
+      ShowSavedArticles();
+    });
+  });  //$(document).on("click", ".article-delete", function())
 
 // Whenever someone clicks a p tag
 $(document).on("click", "p", function() {
@@ -283,6 +298,44 @@ $(document).on("click", "#note-save", function() {
   
   }  // DisplayScrapedArticles()  
 
+  //**********************************************************************************
+  // * Function: createSavedArticleRow(article)                                      *
+  // * This function creates a save article row for display on the article list      *
+  // *********************************************************************************
+  function createSavedArticleRow(article, index) {
+    
+    var $newRow = $(
+    [
+        "<div class='row article-box'>",
+            "<div class='col-3'>",
+                "<img src='", article.image, "' alt='test image' class='img-thumbnail' width='300' height='200'>",
+            "</div>",
+            "<div class='col-9'>",
+              "<div class='row'>",
+                  "<div class='col-8'>",
+                    "<h5>", article.date, "</h5>",
+                  "</div>",
+                  "<div class='col-2'>",
+                      "<button class='btn btn-primary article-notes' id='article-notes' value='", article._id,"'>Article Notes</button>",
+                  "</div>",
+                  "<div class='col-2'>",
+                      "<button class='btn btn-danger article-delete' id='article-delete' value='", article._id,"'>Delete Article</button>",
+                  "</div>",
+              "</div>",
+              "<div class='row'>",
+                "<h4><a href='", article.link, "' target='_blank'>", article.title,"</a></h4>",
+              "</div>",
+              "<div class='row'>",
+                  "<p>", article.summary, "</p>",
+              "</div>",
+            "</div>",
+        "</div>"   
+    ].join("")
+    ); 
+    
+    return $newRow;
+  }   // function createSavedArticleRow(article)
+
   // ********************************************************************************
   // * Function: DisplaySavedArticles()                                             *
   // * This function displays the saved articles on the page                        *
@@ -298,6 +351,7 @@ $(document).on("click", "#note-save", function() {
         var articlesToAdd = [];
 
         for (var i = 0; i < saved_list.length; i++) {
+          if (DebugOn) console.log ("Display saved article ", saved_list[i]);
           articlesToAdd.push(createSavedArticleRow(saved_list[i], i));
         }
 

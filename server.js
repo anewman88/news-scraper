@@ -38,7 +38,7 @@ mongoose.connect("mongodb://localhost/NasaNews", { useNewUrlParser: true });
 // =============================================================
 
 var DebugOn = true;
-var DoThis = false;
+
 
 // A GET route for scraping the website
 
@@ -47,7 +47,6 @@ var DoThis = false;
 
 
 /*******************************************************************************************************/
-//if (DoThis) {
 
 // HTML GET Requests
 // Below code handles when users "visit" a page.
@@ -179,6 +178,21 @@ app.get("/articles/:id", function(req, res) {
     });
 });
 
+//Route for deleting an article from the db
+//*********************************************************************************
+// * Function: app.delete("/deletesaved/:id", function(req, res))                 *
+// * Route for deleting an article from the db                                    *
+// ********************************************************************************
+app.delete("/deletesaved/:id", function(req, res) {
+  db.Article.deleteOne({ _id: req.params.id })
+  .then(function(removed) {
+    res.json(removed);
+  }).catch(function(err,removed) {
+      // If an error occurred, send it to the client
+        res.json(err);
+    });
+});  // app.delete("/deletesaved/:id", function(req, res)) 
+
 // Route for saving/updating an Article's associated Comment
 app.post("/articles/:id", function(req, res) {
   // Create a new comment and pass the req.body to the entry
@@ -198,11 +212,8 @@ app.post("/articles/:id", function(req, res) {
       res.json(err);
     });
 
-
-
 });
 
-//}  // if (DoThis)
 /*******************************************************************************************************/
 
 // Start the server

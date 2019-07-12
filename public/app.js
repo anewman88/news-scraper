@@ -7,14 +7,14 @@ $(document).ready(function() {
   var ArticleIndex = 0;
 
   // Event listeners for button clicks
-  // $(document).on("click", "button.save-article", SaveArticle());
   // $(document).on("click", "button.add-comment", AddComment());
   // $(document).on("click", "button.delete-comment", DeleteComment());
-  
-  function SaveArticle(event) {
-//    event.preventDefault();
 
-  }  // SaveArticle(event)
+  //******************************* Executed Code *************************************/
+  // Scrape the articles from the website and display them on the page
+  scrapeAticles();      
+
+  //************************************ Functions ***********************************/
 
   function AddComment(event) {
 //    event.preventDefault();
@@ -34,10 +34,9 @@ $(document).ready(function() {
   $("#ScrapeBtn").click(function(){
     if (DebugOn) console.log ("Scrape Button Clicked");
 
-    getArticles();                         // get the article_list and display them
+    scrapeArticles();  // get the article_list and display them
     if (DebugOn) console.log ("Got article_list ", article_list);
-  
-    DisplayArticles();
+
   });  // $("#ScrapeBtn").click(function())
 
   //*********************************************************************************
@@ -47,6 +46,11 @@ $(document).ready(function() {
   // ********************************************************************************
   $("#ClearScrapedBtn").click(function(){
     if (DebugOn) console.log ("Clear Scraped Button Clicked");
+    // Clear the article display
+    $ArticleList.empty();
+
+    // Clear the article_list 
+    article_list = [];
 
   });  // $("#ClearScrapedBtn").click(function())
 
@@ -57,6 +61,35 @@ $(document).ready(function() {
   // ********************************************************************************
   $("#ShowSavedBtn").click(function(){
     if (DebugOn) console.log ("Show Saved Button Clicked");
+
+    $.ajax({
+      method: "GET",
+      url: "/savedarticles"
+    })
+    .then(function(data) {
+      if (DebugOn) console.log("Got saved articles", data);
+
+      DisplaySavedArticles(data);
+
+      // The title of the article
+      $("#notes").append("<h2>" + data.title + "</h2>");
+      // An input to enter a new title
+      $("#notes").append("<input id='titleinput' name='title' >");
+      // A textarea to add a new note body
+      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
+      // A button to submit a new note, with the id of the article saved to it
+      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
+
+      // If there's a note in the article
+      if (data.note) {
+        // Place the title of the note in the title input
+        $("#titleinput").val(data.note.title);
+        // Place the body of the note in the body textarea
+        $("#bodyinput").val(data.note.body);
+      }
+    });
+  
+
 
   });  // $("#ShowSavedBtn").click(function())
 
@@ -71,23 +104,6 @@ $(document).ready(function() {
   });  // $("#ClearSavedBtn").click(function())
 
 
-  //************************************************************************************/
-  // Get the articles from  the website and diplay them on the page
-  getArticles();                         // get the article_list and display them
-  if (DebugOn) console.log ("Got article_list ", article_list);
-
-// Grab the saved articles as a json
-$.getJSON("/articles", function(data) {
-
-
-  DisplayArticles();
-
-  // For each one
-  for (var i = 0; i < data.length; i++) {
-    // Display the apropos information on the page
-    $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].link + "</p>");
-  }
-});
 
 
 // Whenever someone clicks a p tag
@@ -125,7 +141,8 @@ $(document).on("click", "p", function() {
 });
 
 // When you click the savenote button
-$(document).on("click", "#savenote", function() {
+$(document).on("click", "#note-save", function() {
+
   // Grab the id associated with the article from the submit button
   var thisId = $(this).attr("data-id");
 
@@ -153,26 +170,61 @@ $(document).on("click", "#savenote", function() {
   $("#bodyinput").val("");
 });
 
+  //*********************************************************************************
+  // * Function: $(document).on("click", "#article-save", function())               *
+  // * Event handler function for the Article Save Button - saves the article       * 
+  // * associated with the clicked Save button in the database                      *
+  // ********************************************************************************
+  $(document).on("click", "#article-save", function() {
+
+    // Get the index associated with the article from the save button
+    var ArticleIndex = parseInt(this.value);   
+    
+    if (DebugOn) console.log ("Saving article number " + ArticleIndex);
+
+    // Run a POST request to save the article
+    $.ajax({
+      method: "POST",
+      url: "/savearticle",
+      data: {
+        title: article_list[ArticleIndex].title,
+        link: article_list[ArticleIndex].link,
+        summary: article_list[ArticleIndex].summary,
+        date: article_list[ArticleIndex].date,
+        image: article_list[ArticleIndex].image,
+      }
+    })
+    .then(function(data) {
+        console.log("response from /savearticle: ", data);
+        
+        // Set the saved flag to true and re-display the article list.
+        article_list[ArticleIndex].saved = true;
+        DisplayScrapedArticles();
+    });  // ajax call
+
+  });  //  $(document).on("click", "#article-save", function())
+
+
     //*********************************************************************************
-    // * Function: getArticles()                                                      *
+    // * Function: scrapeArticles()                                                   *
     // * This function gets the articles from the website and displays them           *
     // ********************************************************************************
-    function getArticles() {
+    function scrapeArticles() {
       $.get("/newscrape", function(data) {
         article_list = data;
         ArticleIndex = 0;  // reset the index into the article array
 
-        if (DebugOn) console.log ("in getArticles- .get data", data);
-        DisplayArticles();   
+        if (DebugOn) console.log ("in scrapeArticles- .get data", data);
+        DisplayScrapedArticles();   
       });
-    }  //function getArticles()
+    }  //function scrapeArticles()
 
     //**********************************************************************************
     // * Function: createArticleRow(article)                                           *
     // * This function creates an article row for display on the article list          *
     // *********************************************************************************
-    function createArticleRow(article) {
-
+    function createArticleRow(article, index) {
+      
       var $newRow = $(
       [
           "<div class='row article-box'>",
@@ -185,7 +237,7 @@ $(document).on("click", "#savenote", function() {
                       "<h5>", article.date, "</h5>",
                     "</div>",
                     "<div class='col-2'>",
-                        "<button class='btn btn-success article-item' id='btn_0' value='0'>Save Article</button>",
+                        "<button class='btn btn-success article-save' id='article-save' value='", index,"'>Save Article</button>",
                     "</div>",
                 "</div>",
                 "<div class='row'>",
@@ -200,30 +252,28 @@ $(document).on("click", "#savenote", function() {
       ); 
       
       return $newRow;
-  }   // function createArticleRow(article)
+    }   // function createArticleRow(article)
 
 
     // ********************************************************************************
-    // * Function: DisplayArticles()                                                  *
-    // * This function displays the scraped article on the page                              *
+    // * Function: DisplayScrapedArticles()                                           *
+    // * This function displays the scraped articles on the page                      *
     // ********************************************************************************
-    function DisplayArticles() {
+    function DisplayScrapedArticles() {
 
+      if (DebugOn) console.log ("In DisplayScrapedArticles array_length: " + article_list.length);
+      
       // make sure there are articles in the array to display
       if (article_list.length > 0) {
           
-          // Paging Determine which articles in the article_list to display 
-          // var firstIndex = ArticleIndex;
-          // var lastIndex = ArticleIndex + ItemsPerPage;
-
-          // if (lastIndex >= article_list.length)
-          //    lastIndex = article_list.length;
-  
           $ArticleList.empty();
           var articlesToAdd = [];
 
           for (var i = 0; i < article_list.length; i++) {
-            articlesToAdd.push(createArticleRow(article_list[i]));
+            // Display it only if the article has NOT been saved
+            if (article_list[i].saved != true) {
+              articlesToAdd.push(createArticleRow(article_list[i], i));
+            }
           }
 
         // populate the articles on the html page
@@ -231,8 +281,33 @@ $(document).on("click", "#savenote", function() {
 
       }  // if (article_list.length > 0)
   
-  }  // DisplayArticles()  
+  }  // DisplayScrapedArticles()  
+
+  // ********************************************************************************
+  // * Function: DisplaySavedArticles()                                             *
+  // * This function displays the saved articles on the page                        *
+  // ********************************************************************************
+  function DisplaySavedArticles(saved_list) {
+
+    if (DebugOn) console.log ("In DisplaySavedArticles array_length: " + saved_list.length);
+    
+    // make sure there are articles in the array to display
+    if (saved_list.length > 0) {
+        
+        $ArticleList.empty();
+        var articlesToAdd = [];
+
+        for (var i = 0; i < saved_list.length; i++) {
+          articlesToAdd.push(createSavedArticleRow(saved_list[i], i));
+        }
+
+      // populate the articles on the html page
+      $ArticleList.append(articlesToAdd);
+
+    }  // if (article_list.length > 0)
+
+  }  // DisplaySavedArticles()  
 
 
 
-});
+});  // $(document).ready(function())

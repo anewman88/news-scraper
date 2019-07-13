@@ -5,11 +5,10 @@ $(document).ready(function() {
   var $CommentList = $(".comment-list");  // Comment Modal
 
   var DebugOn = true;   // debug flag
-  var ItemsPerPage = 8;
-  var ArticleIndex = 0;
 
   //**********************************************************************************/
   // Scrape the articles from the website and display them on the page
+  if (DebugOn) console.log ("In app.js. About to do initial scrapeArticles()");
   scrapeArticles();      
 
   //************************************ Functions ***********************************/

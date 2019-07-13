@@ -19,6 +19,11 @@ body {
   margin: 10px;
 }
 
+.article-comments
+.article-delete {
+    margin: 10px;
+}
+
 .article-box {
     background-color: rgb(223, 222, 219);
     margin-bottom: 15px;

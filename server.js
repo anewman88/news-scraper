@@ -162,8 +162,11 @@ app.get("/savedarticles", function(req, res) {
     });
 });  // app.get("/savedarticles", function(req, res))
 
-// Route for grabbing a specific Article by id, populate it with it's comment
-app.get("/articles/:id", function(req, res) {
+//*********************************************************************************
+// * Function: app.get("/getarticle/:id", function(req, res))                     *
+// * Route for grabbing a specific Article by id, populate it with it's comment   *
+// ********************************************************************************
+app.get("/getarticle/:id", function(req, res) {
   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
   db.Article.findOne({ _id: req.params.id })
     // ..and populate all of the comments associated with it
@@ -176,9 +179,8 @@ app.get("/articles/:id", function(req, res) {
       // If an error occurred, send it to the client
       res.json(err);
     });
-});
+});  //app.get("/getarticle/:id", function(req, res))
 
-//Route for deleting an article from the db
 //*********************************************************************************
 // * Function: app.delete("/deletesaved/:id", function(req, res))                 *
 // * Route for deleting an article from the db                                    *
@@ -194,7 +196,7 @@ app.delete("/deletesaved/:id", function(req, res) {
 });  // app.delete("/deletesaved/:id", function(req, res)) 
 
 // Route for saving/updating an Article's associated Comment
-app.post("/articles/:id", function(req, res) {
+app.post("/savecomment/:id", function(req, res) {
   // Create a new comment and pass the req.body to the entry
   db.Comment.create(req.body)
     .then(function(dbComment) {
@@ -213,6 +215,36 @@ app.post("/articles/:id", function(req, res) {
     });
 
 });
+
+//*********************************************************************************
+// * Function: app.post("/savecomment/:id", function(req, res))                   *
+// * Route for saving/updating an Article's associated Comment                    *
+// ********************************************************************************
+app.post("/savecomment/:id", function(req, res) {
+  // save the new comment that gets posted to the Comments collection
+  // then find the associated article from the req.params.id
+  // and update it's "comment" property with the _id of the new comment
+
+  // Create a new comment and pass the req.body (comment object) to the entry
+  db.Comment.create(req.body)
+    .then(function(dbComment) {
+      db.Article.findOneAndUpdate(
+        { _id: req.params.id }, 
+        {$push: { comment: dbComment._id }}, 
+        { new: true })
+      .then(function(dbArticle) {
+        console.log(dbArticle);
+        res.json(dbArticle);
+      })
+      .catch(function(err) {
+        // If an error occurred, send it to the client
+        res.json(err);
+      });
+    })
+    .catch(function(err) {
+      res.json(err);
+    })
+});  //app.post("/savecomment/:id", function(req, res))
 
 /*******************************************************************************************************/
 

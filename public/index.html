@@ -8,9 +8,22 @@
     <meta charset="UTF-8">
     <title>NASA JPL Latest News</title>
     <!-- Latest compiled and minified CSS & JS -->
+<!--     
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.0.0/lumen/bootstrap.min.css"/>
     <script src="https://code.jquery.com/jquery.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+ -->
+    <!-- Latest compiled and minified CSS & JS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
     <link rel="stylesheet" href="./css/style.css">
 
   </head>
@@ -84,116 +97,39 @@
 
  <!-- *********************** Modals ************************ -->
   
-  <!------------------- Shopping Cart Modal ------------------>
-  <div id="CartModal" class="modal fade" role="dialog">
-
-      <div class="modal-dialog modal-dialog-scrollable modal-lg">
-  
-          <div class="modal-content">
-  
-            <div class="modal-header">
-                  <h3 class="modal-title" id="modal-title">Shopping Cart</h3>
-                  <button type="button" class="btn btn-default" data-dismiss="modal"> Close </button>
-            </div>
-  
-            <div class="modal-body">
-
-                <div class="row">
-                    <div class="col-2 text-center">
-                      <p>Product #</p>
-                    </div>
-                    <div class="col-4">
-                       <p>Product Name</p>
-                    </div>
-                    <div class="col-2 text-center">
-                        <p>Quantity</p>
-                    </div>
-                    <div class="col-2">
-                        <p>Unit Price</p>
-                    </div>
-                    <div class="col-2">
-                        <p>Total Cost</p>
-                    </div>
-                </div>  <!-- Row -->
-
-                <div>
-                    <span class="shoppingcart-list"></span>
-                </div>
-                     
-            </div>  <!--  modal-body -->
-          </div> <!-- modal-content -->
-      </div> <!-- modal-dialog -->
-  </div>  <!-- outer modal div -->
-
-  <!------------------- Enter Modal ------------------>
-  <div id="CheckoutModal" class="modal fade" role="dialog">
+  <!------------------- Comment Modal ------------------>
+  <div id="CommentModal" class="modal fade" role="dialog">
 
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
 
         <div class="modal-content">
 
           <div class="modal-header">
-                <h3 class="modal-title" id="modal-title">Checkout</h3>
+                <h3 class="modal-title" id="modal-title">Comments for Article</h3>
                 <button type="button" class="btn btn-default" data-dismiss="modal"> Close </button>
           </div>
 
           <div class="modal-body">
-
-              <p>Please enter your shipping address information below.  Items marked with an * are required.</p>
+              <!-- <p>Comments</p> -->
+              <div>
+                <span class="comment-list"></span>
+              </div>
+              <hr>
               <form>
                   <div class="form-group">
-                      <label for="CustomerFirstName">First Name: *</label>
-                      <input type="text" class="form-control" id="CustomerFirstName">
+                      <label for="UserName">User Name: (optional)</label>
+                      <input type="text" class="form-control" id="UserName">
                   </div>
                   <div class="form-group">
-                       <label for="CustomerLastName">Last Name: *</label>
-                       <input type="text" class="form-control" id="CustomerLastName">
-                  </div>
-          
-                <div class="form-group">
-                    <label for="CustomerAddr">Address: *</label>
-                    <input type="text" class="form-control" placeholder="Line 1" id="CustomerAddr1">
-                </div>
-
-                <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Line 2 (optional)" id="CustomerAddr2">
-                </div>
-
-                <div class="form-group">
-                    <label for="City">City: *</label>
-                    <input type="text" class="form-control" id="CustomerCity">
-                </div>
-
-                <div class="form-group">
-                    <label for="State">State: *</label>
-                    <input type="text" class="form-control" id="CustomerState">
-                </div>
-
-                <div class="form-group">
-                    <label for="Zip">Zip Code: *</label>
-                    <input type="text" class="form-control" id="CustomerZip">
-                </div>
-
-                <div class="form-group">
-                    <label for="Email">Email Address: *</label>
-                    <input type="text" class="form-control" placeholder="JohnDoe@gmail.com" id="CustomerEmail">
-                </div>
-
-                <div class="form-group">
                     <label for="Comment">Comment:</label>
-                    <input type="text" class="form-control" id="CustomerComment">
-                </div>
-
+                    <input type="text" class="form-control" id="UserComment">
+                  </div>
               </form>
-
-              <div>
-                  <span class="checkout-list"></span>
-              </div>
                    
           </div>  <!--  modal-body -->
           <div class="modal-footer">
-              <button type="submit" class="btn btn-primary" id="order-submit">
-                  <i class="fa fa-check-circle" aria-hidden="true"></i> Submit
+              <button type="submit" class="btn btn-primary" value="0" id="comment-submit">
+                  <i class="fa fa-check-circle" aria-hidden="true"></i> Save Comment
               </button>
           </div>
 
@@ -325,7 +261,7 @@
   <!------------------- AlertBox Modal ------------------>
 
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->
     <script src="app.js"></script>
   </body>
 </html>

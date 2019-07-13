@@ -2,29 +2,17 @@ $(document).ready(function() {
 
   var article_list = [];   // The article list array from the scrape
   var $ArticleList = $(".article-list");  // The article list for display 
+  var $CommentList = $(".comment-list");  // Comment Modal
+
   var DebugOn = true;   // debug flag
   var ItemsPerPage = 8;
   var ArticleIndex = 0;
 
-  // Event listeners for button clicks
-  // $(document).on("click", "button.add-comment", AddComment());
-  // $(document).on("click", "button.delete-comment", DeleteComment());
-
-  //******************************* Executed Code *************************************/
+  //**********************************************************************************/
   // Scrape the articles from the website and display them on the page
   scrapeArticles();      
 
   //************************************ Functions ***********************************/
-
-  function AddComment(event) {
-//    event.preventDefault();
-
-  }  // AddComment(event)
-
-  function DeleteComment(event) {
-//    event.preventDefault();
-
-  }  // DeleteComment(event)
 
   //*********************************************************************************
   // * Function: $("#ScrapeBtn")                                                    *
@@ -93,7 +81,6 @@ $(document).ready(function() {
 
   });  // $("#ClearSavedBtn").click(function())
 
-
   //*********************************************************************************
   // * Function: $(document).on("click", ".article-delete", function())             *
   // * Event handler function for the Delete Article Button - deletes a single      *
@@ -105,7 +92,7 @@ $(document).ready(function() {
     
     // Get the index associated with the article from the save button
     var ArticleId = this.value;
-       
+
     if (DebugOn) console.log ("Article to be deleted: " + ArticleId);
   
     $.ajax({
@@ -121,69 +108,6 @@ $(document).ready(function() {
     });
   });  //$(document).on("click", ".article-delete", function())
 
-// Whenever someone clicks a p tag
-$(document).on("click", "p", function() {
-  // Empty the notes from the note section
-  $("#notes").empty();
-  // Save the id from the p tag
-  var thisId = $(this).attr("data-id");
-
-  // Now make an ajax call for the Article
-  $.ajax({
-    method: "GET",
-    url: "/articles/" + thisId
-  })
-    // With that done, add the note information to the page
-    .then(function(data) {
-      console.log(data);
-      // The title of the article
-      $("#notes").append("<h2>" + data.title + "</h2>");
-      // An input to enter a new title
-      $("#notes").append("<input id='titleinput' name='title' >");
-      // A textarea to add a new note body
-      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
-      // A button to submit a new note, with the id of the article saved to it
-      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
-
-      // If there's a note in the article
-      if (data.note) {
-        // Place the title of the note in the title input
-        $("#titleinput").val(data.note.title);
-        // Place the body of the note in the body textarea
-        $("#bodyinput").val(data.note.body);
-      }
-    });
-});
-
-// When you click the savenote button
-$(document).on("click", "#note-save", function() {
-
-  // Grab the id associated with the article from the submit button
-  var thisId = $(this).attr("data-id");
-
-  // Run a POST request to change the note, using what's entered in the inputs
-  $.ajax({
-    method: "POST",
-    url: "/articles/" + thisId,
-    data: {
-      // Value taken from title input
-      title: $("#titleinput").val(),
-      // Value taken from note textarea
-      body: $("#bodyinput").val()
-    }
-  })
-    // With that done
-    .then(function(data) {
-      // Log the response
-      console.log(data);
-      // Empty the notes section
-      $("#notes").empty();
-    });
-
-  // Also, remove the values entered in the input and textarea for note entry
-  $("#titleinput").val("");
-  $("#bodyinput").val("");
-});
 
   //*********************************************************************************
   // * Function: $(document).on("click", "#article-save", function())               *
@@ -312,11 +236,11 @@ $(document).on("click", "#note-save", function() {
             "</div>",
             "<div class='col-9'>",
               "<div class='row'>",
-                  "<div class='col-8'>",
+                  "<div class='col-7'>",
                     "<h5>", article.date, "</h5>",
                   "</div>",
-                  "<div class='col-2'>",
-                      "<button class='btn btn-primary article-notes' id='article-notes' value='", article._id,"'>Article Notes</button>",
+                  "<div class='col-3'>",
+                      "<button class='btn btn-success article-comments' id='article-comments' value='", article._id,"'>Article Comments</button>",
                   "</div>",
                   "<div class='col-2'>",
                       "<button class='btn btn-danger article-delete' id='article-delete' value='", article._id,"'>Delete Article</button>",
@@ -342,12 +266,13 @@ $(document).on("click", "#note-save", function() {
   // ********************************************************************************
   function DisplaySavedArticles(saved_list) {
 
-    if (DebugOn) console.log ("In DisplaySavedArticles array_length: " + saved_list.length);
+    if (DebugOn) console.log ("In DisplaySavedArticles array_length: " + saved_list.length);    
+    
+    $ArticleList.empty();
     
     // make sure there are articles in the array to display
     if (saved_list.length > 0) {
         
-        $ArticleList.empty();
         var articlesToAdd = [];
 
         for (var i = 0; i < saved_list.length; i++) {
@@ -362,6 +287,198 @@ $(document).on("click", "#note-save", function() {
 
   }  // DisplaySavedArticles()  
 
+  //*********************************************************************************
+  // * Function: $(document).on("click", ".article-comments", function())           *
+  // * This event handler function shows the modal for displaying and entering an   *
+  // * article's comments                                                           *
+  // ********************************************************************************
+  $(document).on("click", ".article-comments", function() {
+
+    if (DebugOn) console.log ("Article Comments Button Clicked");
+     
+    // Display the Comment modal and wait for submit or dismiss button
+    $("#CommentModal").modal("show");             
+
+    // Get the index associated with the article from the article comments button
+    var ArticleId = this.value;
+
+    // Assign the ArticleId to the value of the submit button 
+    $("#comment-submit").val(ArticleId);
+
+    if (DebugOn) console.log ("Article Comments Id: " + ArticleId);
+    
+    $.ajax({
+      method: "GET",
+      url: "/getarticle/" + ArticleId
+    })
+    .then(function(data) {
+    
+      if (DebugOn) console.log("in show comments", data);  // Log the response
+      if (DebugOn) console.log("num comments is: ", data.comment.length); 
+
+      ListArticleComments(data.comment);
+
+      // if there are comments, then show the comments
+      if (data.comment.length>0) {
+        ListArticleComments(data.comment);
+      }
+      
+    });
+  });  // $(document).on("click", ".article-comments", function()
+  
+
+  //**********************************************************************************
+  // * Function: function ListArticleComment(comments)                               *
+  // * This function lists the article comments in the Comment Modal                 *
+  // *********************************************************************************
+  function ListArticleComments(comments) {
+
+    if (DebugOn) console.log ("In ShowArticleComments", comments);
+
+    var commentsToAdd = [];
+
+    // for (var i=0; i<comments.length; i++) {
+    //    if (DebugOn) console.log ("Comment: " + comments[i]);
+    //    commentsToAdd.push(createCommentRow(comments[i]));
+    // }
+
+    commentsToAdd.push(createCommentRow(comments));
+
+    // populate the articles on the html page
+    $CommentList.append(commentsToAdd);
+
+  }  // function ListArticleComments(comments)
+
+  //**********************************************************************************
+  // * Function: createCommentRow(comment)                                           *
+  // * This function creates a comment row                                           *
+  // *********************************************************************************
+  function createCommentRow(comment) {
+    
+    var $newRow = $(
+    [
+        "<div class='row comment-box'>",
+            "<div class='col-'2>",
+                "<p>",comment.username,":</p>",
+            "</div>",
+            "<div class='col-8'>",
+                "<p>",comment.text,"</p>",
+            "</div>",
+            "<div class='col-2'>",
+                "<button class='btn btn-danger comment-delete' id='comment-delete' value='", comment._id,"'>Delete Comment</button>",
+            "</div>",
+        "</div>"   
+    ].join("")
+    ); 
+    
+    return $newRow;
+  }   // function createCommentRow(comment, id)
+
+  //**********************************************************************************
+  // * Function: $("#comment-submit").on("click", function())                        *
+  // * This event handler function saves the input comment information for current   *
+  // * article when the Comment Submit button is clicked.                            *
+  // *********************************************************************************
+  $("#comment-submit").on("click", function() {  
+    if (DebugOn) console.log ("in comment-submit");
+
+    // Turn off the Comment Modal
+    $("#CommentModal").modal("hide");  
+    
+    // Get the input comment information
+    var  Comment = {
+      username: $("#UserName").val(),
+      text: $("#UserComment").val(),
+    };
+
+    // Get the index associated with the article from the comment submit button
+    var ArticleId = this.value;
+
+    if (DebugOn) console.log ("Input Comment: ", Comment);
+    if (DebugOn) console.log ("for article id: " + ArticleId);
+    
+    $.ajax({
+      method: "POST",
+      url: "/savecomment/" + ArticleId,
+      data: {
+        username: Comment.username,
+        text: Comment.text
+      }
+    })
+    .then(function(data) {
+      // Log the response
+      console.log(data);
+    });  
+
+    // Clear the values entered in the input comment entry
+    $("#UserName").val("");
+    $("#UserComment").val("");
+
+  });  // $("#comment-submit").on("click", function()
 
 
 });  // $(document).ready(function())
+
+// Whenever someone clicks a p tag
+$(document).on("click", "p", function() {
+  // Empty the notes from the note section
+  $("#notes").empty();
+  // Save the id from the p tag
+  var thisId = $(this).attr("data-id");
+
+  // Now make an ajax call for the Article
+  $.ajax({
+    method: "GET",
+    url: "/articles/" + thisId
+  })
+    // With that done, add the note information to the page
+    .then(function(data) {
+      console.log(data);
+      // The title of the article
+      $("#notes").append("<h2>" + data.title + "</h2>");
+      // An input to enter a new title
+      $("#notes").append("<input id='titleinput' name='title' >");
+      // A textarea to add a new note body
+      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
+      // A button to submit a new note, with the id of the article saved to it
+      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
+
+      // If there's a note in the article
+      if (data.note) {
+        // Place the title of the note in the title input
+        $("#titleinput").val(data.note.title);
+        // Place the body of the note in the body textarea
+        $("#bodyinput").val(data.note.body);
+      }
+    });
+});
+
+// When you click the savenote button
+$(document).on("click", "#note-save", function() {
+
+  // Grab the id associated with the article from the submit button
+  var thisId = $(this).attr("data-id");
+
+  // Run a POST request to change the note, using what's entered in the inputs
+  $.ajax({
+    method: "POST",
+    url: "/articles/" + thisId,
+    data: {
+      // Value taken from title input
+      title: $("#titleinput").val(),
+      // Value taken from note textarea
+      body: $("#bodyinput").val()
+    }
+  })
+    // With that done
+    .then(function(data) {
+      // Log the response
+      console.log(data);
+      // Empty the notes section
+      $("#notes").empty();
+    });
+
+  // Also, remove the values entered in the input and textarea for note entry
+  $("#titleinput").val("");
+  $("#bodyinput").val("");
+});

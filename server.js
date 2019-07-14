@@ -40,15 +40,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
 var DebugOn = true;
 
-
-// A GET route for scraping the website
-
-//console.log ("requiring routes.js");
-//require ("./routes/routes.js");
-
-
 /*******************************************************************************************************/
-
 // HTML GET Requests
 // Below code handles when users "visit" a page.
 // ---------------------------------------------------------------------------
@@ -56,6 +48,9 @@ app.get("/", function(req, res) {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
+/*******************************************************************************************************/
+// API routes
+// ---------------------------------------------------------------------------
 //*********************************************************************************
 // * Function: app.get("/newscrape", function(req, res))                          *
 // * Route for "scraping" the JPL website and returning an array of articles to   *
@@ -68,11 +63,6 @@ app.get("/newscrape", function(req, res) {
   // Get the body of the website html with axios
   axios.get("https://www.jpl.nasa.gov/news/")
   .then(function(response) {
-
-    if (DebugOn) {
-      console.log ("Scraped Data ", response.data);
-      console.log ("**************************************************************");
-    } 
 
     // Load the response.data into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
@@ -129,8 +119,6 @@ app.post("/savearticle", function(req, res) {
 
     /* Get the array of articles to be saved */
     var Article = req.body;
-
-    if (DebugOn) console.log ("In /savearticle article: ", Article);
 
     // Create a new Article using the `result` object built from scraping
     db.Article.create(Article)
@@ -196,7 +184,25 @@ app.delete("/deletesaved/:id", function(req, res) {
     });
 });  // app.delete("/deletesaved/:id", function(req, res)) 
 
-// Route for saving/updating an Article's associated Comment
+//*********************************************************************************
+// * Function: app.delete("/deletesaved", function(req, res))                 *
+// * Route for deleting all the saved articles from the db                                    *
+// ********************************************************************************
+app.delete("/deletesaved", function(req, res) {
+  db.Article.deleteMany()
+  .then(function(removed) {
+    res.json(removed);
+  }).catch(function(err,removed) {
+      // If an error occurred, send it to the client
+        res.json(err);
+  });
+});  // app.delete("/deletesaved", function(req, res)) 
+
+
+//*********************************************************************************
+// * Function: app.post("/savecomment/:id", function(req, res))                   *
+// * Route for saving an Article's associated Comment                             *
+// ********************************************************************************
 app.post("/savecomment/:id", function(req, res) {
   // Create a new comment and pass the req.body to the entry
   db.Comment.create(req.body)
@@ -204,7 +210,11 @@ app.post("/savecomment/:id", function(req, res) {
       // If a Comment was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Comment
       // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
       // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-      return db.Article.findOneAndUpdate({ _id: req.params.id }, { comment: dbComment._id }, { new: true });
+      return db.Article.findOneAndUpdate(
+        {_id: req.params.id }, 
+        { $push: {comment: dbComment._id }}, 
+        { new: true }
+      );
     })
     .then(function(dbArticle) {
       // If we were able to successfully update an Article, send it back to the client
@@ -215,37 +225,44 @@ app.post("/savecomment/:id", function(req, res) {
       res.json(err);
     });
 
-});
+});  //app.post("/savecomment/:id", function(req, res))
 
 //*********************************************************************************
-// * Function: app.post("/savecomment/:id", function(req, res))                   *
-// * Route for saving/updating an Article's associated Comment                    *
+// * Function: app.delete("/notes/:noteid/:articleid", function (req, res))       *
+// * Route for deleting an Article's associated Comment                           *
 // ********************************************************************************
-app.post("/savecomment/:id", function(req, res) {
-  // save the new comment that gets posted to the Comments collection
-  // then find the associated article from the req.params.id
-  // and update it's "comment" property with the _id of the new comment
+app.delete("/deletecomment/:articleid/:commentid", function (req, res) {
+  
+  // First "pull" the comment from the article
+  db.Article.update({
+      "_id": req.params.articleid
+    }, {
+      "$pull": {
+        "comment": req.params.commentid
+      }
+    },
+    function (error, deleted) {
+      // Show any errors
+      if (error) {
+        console.log(error);
+        res.send(error);
+      } else {
+        // Now delete the comment from the database
+        if (DebugOn) console.log("comment removed from article");
+        db.Comment.findByIdAndRemove(req.params.commentid, function (err, removed) {
+          if (err)
+            res.send(err);
+          else
+            res.json({
+              removed: 'comment Deleted!',
+              articleid: req.params.articleid
+            });
 
-  // Create a new comment and pass the req.body (comment object) to the entry
-  db.Comment.create(req.body)
-    .then(function(dbComment) {
-      db.Article.findOneAndUpdate(
-        { _id: req.params.id }, 
-        {$push: { comment: dbComment._id }}, 
-        { new: true })
-      .then(function(dbArticle) {
-        console.log(dbArticle);
-        res.json(dbArticle);
-      })
-      .catch(function(err) {
-        // If an error occurred, send it to the client
-        res.json(err);
-      });
-    })
-    .catch(function(err) {
-      res.json(err);
-    })
-});  //app.post("/savecomment/:id", function(req, res))
+        });
+      }  // else
+    }); //function (error, deleted)
+
+}); //  app.delete("/deletecomment/:commentid/:articleid", function (req, res))
 
 /*******************************************************************************************************/
 

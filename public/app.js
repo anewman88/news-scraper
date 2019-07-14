@@ -3,8 +3,9 @@ $(document).ready(function() {
   var article_list = [];   // The article list array from the scrape
   var $ArticleList = $(".article-list");  // The article list for display 
   var $CommentList = $(".comment-list");  // Comment Modal
+  var $CommentTitle = $(".modal-title");  // Comment Modal Header
 
-  var DebugOn = true;   // debug flag
+  var DebugOn = false;   // debug flag
 
   //**********************************************************************************/
   // Scrape the articles from the website and display them on the page
@@ -78,6 +79,20 @@ $(document).ready(function() {
   $("#ClearSavedBtn").click(function(){
     if (DebugOn) console.log ("Clear Saved Button Clicked");
 
+        if (DebugOn) console.log ("All articles to be deleted");
+      
+        $.ajax({
+          method: "DELETE",
+          url: "/deletesaved"
+        })
+        .then(function(data) {
+          
+          if (DebugOn) console.log(data);  // Log the response
+          $ArticleList.empty();
+          article_list = [];
+        });
+    
+
   });  // $("#ClearSavedBtn").click(function())
 
   //*********************************************************************************
@@ -148,6 +163,7 @@ $(document).ready(function() {
     // * This function gets the articles from the website and displays them           *
     // ********************************************************************************
     function scrapeArticles() {
+
       $.get("/newscrape", function(data) {
         article_list = data;
         ArticleIndex = 0;  // reset the index into the article array
@@ -292,16 +308,28 @@ $(document).ready(function() {
   // * article's comments                                                           *
   // ********************************************************************************
   $(document).on("click", ".article-comments", function() {
-
+  
     if (DebugOn) console.log ("Article Comments Button Clicked");
-     
+  
+    // Get the index associated with the article from the article comments button
+    var ArticleId = this.value;
+    
+    GetCommentList(ArticleId);
+  });  // $(document).on("click", ".article.comments", function())
+
+  //**********************************************************************************
+  // * Function: function GetCommentList(ArticleId)                                  *
+  // * This function gets the article's comments from the database and displays them *
+  // * in the Article comments modal                                                 *
+  // *********************************************************************************
+function GetCommentList(ArticleId) {
+
     // Display the Comment modal and wait for submit or dismiss button
     $("#CommentModal").modal("show");             
 
-    // Get the index associated with the article from the article comments button
-    var ArticleId = this.value;
+    $CommentTitle.text("Comments for Article " + ArticleId);
 
-    // Assign the ArticleId to the value of the submit button 
+    // Assign the ArticleId to the value from the submit button 
     $("#comment-submit").val(ArticleId);
 
     if (DebugOn) console.log ("Article Comments Id: " + ArticleId);
@@ -315,56 +343,61 @@ $(document).ready(function() {
       if (DebugOn) console.log("in show comments", data);  // Log the response
       if (DebugOn) console.log("num comments is: ", data.comment.length); 
 
-      ListArticleComments(data.comment);
-
       // if there are comments, then show the comments
       if (data.comment.length>0) {
-        ListArticleComments(data.comment);
+        ListArticleComments(data.comment, ArticleId);
+      }
+      else {
+        $CommentList.text("There are no comments for this article");
       }
       
     });
-  });  // $(document).on("click", ".article-comments", function()
+  }  // function GetCommentList(ArticleId)
   
 
   //**********************************************************************************
-  // * Function: function ListArticleComment(comments)                               *
-  // * This function lists the article comments in the Comment Modal                 *
+  // * Function: function ListArticleComment(comments, articleId)                    *
+  // * This function lists the article's comments in the Comment Modal               *
   // *********************************************************************************
-  function ListArticleComments(comments) {
+  function ListArticleComments(comments, articleId) {
 
-    if (DebugOn) console.log ("In ShowArticleComments", comments);
+    if (DebugOn) console.log ("In ListArticleComments for article: " + articleId, comments);
+    
+    $CommentList.empty();
 
     var commentsToAdd = [];
 
-    // for (var i=0; i<comments.length; i++) {
-    //    if (DebugOn) console.log ("Comment: " + comments[i]);
-    //    commentsToAdd.push(createCommentRow(comments[i]));
-    // }
+    for (var i=0; i<comments.length; i++) {
+       if (DebugOn) console.log ("Comment: " + comments[i]);
+       commentsToAdd.push(createCommentRow(comments[i], articleId));
+    }
 
-    commentsToAdd.push(createCommentRow(comments));
-
-    // populate the articles on the html page
+    // populate the articles on the Comment Modal
     $CommentList.append(commentsToAdd);
 
-  }  // function ListArticleComments(comments)
+  }  // function ListArticleComments(comments, articleId)
 
   //**********************************************************************************
   // * Function: createCommentRow(comment)                                           *
   // * This function creates a comment row                                           *
   // *********************************************************************************
-  function createCommentRow(comment) {
+  function createCommentRow(comment, ArticleId) {
+    
+    var ArticleComment = ArticleId+"/"+comment._id;
+
+    if (DebugOn) console.log ("in createCommentRow article/comment " + ArticleComment);
     
     var $newRow = $(
     [
         "<div class='row comment-box'>",
-            "<div class='col-'2>",
+            "<div class='col-2'>",
                 "<p>",comment.username,":</p>",
             "</div>",
-            "<div class='col-8'>",
+            "<div class='col-9'>",
                 "<p>",comment.text,"</p>",
             "</div>",
-            "<div class='col-2'>",
-                "<button class='btn btn-danger comment-delete' id='comment-delete' value='", comment._id,"'>Delete Comment</button>",
+            "<div class='col-1'>",
+                "<button class='btn btn-danger comment-delete' id='comment-delete' value='", ArticleComment, "'>X</button>",
             "</div>",
         "</div>"   
     ].join("")
@@ -372,6 +405,34 @@ $(document).ready(function() {
     
     return $newRow;
   }   // function createCommentRow(comment, id)
+
+  //**********************************************************************************
+  // * Function: $(document).on("click", ".comment-delete", function())              *
+  // * This event handler function deletes the selected comment from the database    *
+  // *********************************************************************************
+  $(document).on("click", ".comment-delete", function() {
+//  $("#comment-delete").on("click", function() {  
+    if (DebugOn) console.log ("in comment-delete");
+ 
+    // Get the index associated with the article from the save button
+    var ArticleComment = this.value;
+    
+    if (DebugOn) console.log ("Article/Comment to be deleted: " + ArticleComment);
+ 
+    $.ajax({
+      method: "DELETE",
+      url: "/deletecomment/" + ArticleComment
+    })
+    .then(function(data) {
+      
+      if (DebugOn) console.log(data);  // Log the response
+      
+      GetCommentList(data.articleid);
+    });
+
+
+  });  // $(document).on("click", ".comment-delete", function())
+
 
   //**********************************************************************************
   // * Function: $("#comment-submit").on("click", function())                        *
@@ -384,100 +445,42 @@ $(document).ready(function() {
     // Turn off the Comment Modal
     $("#CommentModal").modal("hide");  
     
-    // Get the input comment information
-    var  Comment = {
-      username: $("#UserName").val(),
-      text: $("#UserComment").val(),
-    };
+    // Only save the comment if there is text in the comment section 
+    if ($("#UserComment").val()) {
 
-    // Get the index associated with the article from the comment submit button
-    var ArticleId = this.value;
+      // Get the input comment information
+      var  Comment = {
+        username: $("#UserName").val(),
+        text: $("#UserComment").val(),
+      };
 
-    if (DebugOn) console.log ("Input Comment: ", Comment);
-    if (DebugOn) console.log ("for article id: " + ArticleId);
-    
-    $.ajax({
-      method: "POST",
-      url: "/savecomment/" + ArticleId,
-      data: {
-        username: Comment.username,
-        text: Comment.text
-      }
-    })
-    .then(function(data) {
-      // Log the response
-      console.log(data);
-    });  
+      // Get the index associated with the article from the comment submit button
+      var ArticleId = this.value;
 
-    // Clear the values entered in the input comment entry
-    $("#UserName").val("");
-    $("#UserComment").val("");
+      if (DebugOn) console.log ("Input Comment: ", Comment);
+      if (DebugOn) console.log ("for article id: " + ArticleId);
+      
+      $.ajax({
+        method: "POST",
+        url: "/savecomment/" + ArticleId,
+        data: {
+          username: Comment.username,
+          text: Comment.text
+        }
+      })
+      .then(function(data) {
+        // Log the response
+        console.log(data);
+      });  
+
+      // Clear the values entered in the input comment entry
+      $("#UserName").val("");
+      $("#UserComment").val("");
+      
+  } // if ($("#UserComment").val())
 
   });  // $("#comment-submit").on("click", function()
 
 
 });  // $(document).ready(function())
 
-// Whenever someone clicks a p tag
-$(document).on("click", "p", function() {
-  // Empty the notes from the note section
-  $("#notes").empty();
-  // Save the id from the p tag
-  var thisId = $(this).attr("data-id");
-
-  // Now make an ajax call for the Article
-  $.ajax({
-    method: "GET",
-    url: "/articles/" + thisId
-  })
-    // With that done, add the note information to the page
-    .then(function(data) {
-      console.log(data);
-      // The title of the article
-      $("#notes").append("<h2>" + data.title + "</h2>");
-      // An input to enter a new title
-      $("#notes").append("<input id='titleinput' name='title' >");
-      // A textarea to add a new note body
-      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
-      // A button to submit a new note, with the id of the article saved to it
-      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
-
-      // If there's a note in the article
-      if (data.note) {
-        // Place the title of the note in the title input
-        $("#titleinput").val(data.note.title);
-        // Place the body of the note in the body textarea
-        $("#bodyinput").val(data.note.body);
-      }
-    });
-});
-
-// When you click the savenote button
-$(document).on("click", "#note-save", function() {
-
-  // Grab the id associated with the article from the submit button
-  var thisId = $(this).attr("data-id");
-
-  // Run a POST request to change the note, using what's entered in the inputs
-  $.ajax({
-    method: "POST",
-    url: "/articles/" + thisId,
-    data: {
-      // Value taken from title input
-      title: $("#titleinput").val(),
-      // Value taken from note textarea
-      body: $("#bodyinput").val()
-    }
-  })
-    // With that done
-    .then(function(data) {
-      // Log the response
-      console.log(data);
-      // Empty the notes section
-      $("#notes").empty();
-    });
-
-  // Also, remove the values entered in the input and textarea for note entry
-  $("#titleinput").val("");
-  $("#bodyinput").val("");
-});
